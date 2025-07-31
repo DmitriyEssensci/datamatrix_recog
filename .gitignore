@@ -2,3 +2,4 @@ __pycache__/
 .venv/
 trash/
 output/*
+!output/*.csv

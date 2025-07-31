@@ -1,7 +1,7 @@
 from PIL import Image
 from pylibdmtx.pylibdmtx import decode
 from io import BytesIO
-import fitz  # PyMuPDF
+import fitz
 import os
 
 def decode_pdf_file(file_path):
@@ -11,12 +11,11 @@ def decode_pdf_file(file_path):
         doc = fitz.open(file_path)
         for page_num in range(doc.page_count):
             page = doc.load_page(page_num)
-            pix = page.get_pixmap(dpi=300)  # Высокое разрешение
+            pix = page.get_pixmap(dpi=300)
             img_bytes = pix.tobytes("png")
             img_buffer = BytesIO(img_bytes)
             image = Image.open(img_buffer)
 
-            # Конвертируем, если нужно
             if image.mode == '1':
                 image = image.convert('L')
             elif image.mode not in ['L', 'RGB']:

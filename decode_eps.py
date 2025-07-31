@@ -3,7 +3,6 @@ from pylibdmtx.pylibdmtx import decode
 from io import BytesIO
 import os
 
-
 def decode_eps_file(file_path):
     try:
         image = Image.open(file_path)

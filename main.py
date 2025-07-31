@@ -1,19 +1,16 @@
-# main.py
 from datetime import datetime
 import os
 import csv
 import decode_eps
 import decode_pdf
 
-# --- Настройки ---
 SCRIPT_DIR = os.path.dirname(__file__)
 INPUT_EPS_DIR = os.path.join(SCRIPT_DIR, 'input_eps')
 INPUT_PDF_DIR = os.path.join(SCRIPT_DIR, 'input_pdf')
 OUTPUT_DIR = os.path.join(SCRIPT_DIR, 'output')
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'output.txt')  # старый лог
-OUTPUT_CSV = os.path.join(OUTPUT_DIR, 'results.csv')   # новый CSV
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, 'output.txt')
+OUTPUT_CSV = os.path.join(OUTPUT_DIR, 'results.csv')
 
-# Создаём папки
 for folder in (INPUT_EPS_DIR, INPUT_PDF_DIR, OUTPUT_DIR):
     os.makedirs(folder, exist_ok=True)
 
@@ -45,22 +42,21 @@ def write_csv_header():
             writer = csv.DictWriter(f, fieldnames=fieldnames)
             writer.writeheader()
 
-
 def write_csv_row(source_file: str, page: str, raw_data: str, ai_data: dict):
     """Записывает одну строку в CSV"""
     row = {
         'timestamp': datetime.now().strftime("%d.%m.%Y %H:%M:%S"),
         'source_file': source_file,
         'page': page,
-        'raw_data': raw_data.replace('\x1d', '|'),  # GS → |
+        'raw_data': raw_data,
     }
-    # Заполняем AI-поля
+
     for ai in ['01', '21', '91', '92', '93', '94', '95', '99']:
         row[f'ai_{ai}'] = ai_data.get(ai, '')
-    # Остальные AI
+
     others = {k: v for k, v in ai_data.items() if k not in ['01', '21', '91', '92', '93', '94', '95', '99']}
     row['other'] = '; '.join([f"{k}:{v}" for k, v in others.items()]) if others else ''
-    # Пустые строки вместо None
+
     for k, v in row.items():
         if v is None:
             row[k] = ''
@@ -69,15 +65,12 @@ def write_csv_row(source_file: str, page: str, raw_data: str, ai_data: dict):
         writer = csv.DictWriter(f, fieldnames=row.keys())
         writer.writerow(row)
 
-
 if __name__ == '__main__':
     run_time = datetime.now().strftime("%d.%m.%Y-%H.%M.%S")
     print(f"🚀 Запуск от {run_time}")
 
-    # Инициализируем CSV
     write_csv_header()
 
-    # === Обработка EPS ===
     eps_files = [
         f for f in os.listdir(INPUT_EPS_DIR)
         if f.lower().endswith('.eps') and os.path.isfile(os.path.join(INPUT_EPS_DIR, f))
@@ -104,7 +97,6 @@ if __name__ == '__main__':
                 ai_data={}
             )
 
-    # === Обработка PDF ===
     pdf_files = [
         f for f in os.listdir(INPUT_PDF_DIR)
         if f.lower().endswith('.pdf') and os.path.isfile(os.path.join(INPUT_PDF_DIR, f))
@@ -123,7 +115,6 @@ if __name__ == '__main__':
 
         for res in results:
             if res and not res.startswith("ERROR"):
-                # Формат: "стр.1: данные"
                 if ':' in res and res.startswith('стр.'):
                     try:
                         page_str, data = res.split(':', 1)
